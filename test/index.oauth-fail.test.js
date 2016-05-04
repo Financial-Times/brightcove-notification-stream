@@ -31,7 +31,7 @@ var event = {
                         "S": "TITLE"
                     },
                     "versionNumber": {
-                        "S": "1"
+                        "N": "1"
                     },
                     "notificationDateTime": {
                         "S": "xxx"

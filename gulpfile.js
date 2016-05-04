@@ -44,6 +44,10 @@ gulp.task('env', function() {
       gutil.log(gutil.colors.red('--role=, must be a valid aws arn'));
       process.exit(1)
     }
+  /*  if ((!isDev) && (!gutil.env.streamArn)) {
+        gutil.log(gutil.colors.red('--streamArn=, must be a valid aws arn'));
+        process.exit(1);
+    } */
 });
 
 gulp.task('lint:js', function() {
@@ -75,7 +79,11 @@ gulp.task('compile', function(callback) {
 
 var lambda_params = {
         FunctionName: 'BrightCoveNotificationStreamLambda',
-        Role: gutil.env.role
+        Role: gutil.env.role,
+     /*   eventSource: {
+                EventSourceArn: gutil.env.streamArn,
+                BatchSize: 10,
+                StartingPosition: "LATEST" } */
 };
 
 var aws_opts = {

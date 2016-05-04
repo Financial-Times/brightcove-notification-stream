@@ -88,16 +88,19 @@ function getOauthTokenAndCheckRenditionState(action, entityId, entityType, versi
 }
 
 exports.handler = function(event, context, callback) {
+    console.log("Request received:\n", JSON.stringify(event));
     event.Records.forEach(function (record) {
-        var action = record.dynamodb['NewImage']['actionType']['S'];
-        var entityId = record.dynamodb['NewImage']['entity']['S'];
-        var status = record.dynamodb['NewImage']['entityStatus']['S'];
-        var entityType = record.dynamodb['NewImage']['entityType']['S'];
-        var versionNumber = record.dynamodb['NewImage']['versionNumber']['S'];
+        if (record.eventName == 'INSERT') {
+            var action = record.dynamodb['NewImage']['actionType']['S'];
+            var entityId = record.dynamodb['NewImage']['entity']['S'];
+            var status = record.dynamodb['NewImage']['entityStatus']['S'];
+            var entityType = record.dynamodb['NewImage']['entityType']['S'];
+            var versionNumber = record.dynamodb['NewImage']['versionNumber']['N'];
 
-        // Brightcove callbacks need an additional check to see if there are any renditions....
-        if (status == "MAYBE_SUCCESS" && action == "CREATE" && entityType == "TITLE") {
-            getOauthTokenAndCheckRenditionState(action, entityId, entityType, versionNumber);
+            // Brightcove callbacks need an additional check to see if there are any renditions....
+            if (status == "MAYBE_SUCCESS" && action == "CREATE" && entityType == "TITLE") {
+                getOauthTokenAndCheckRenditionState(action, entityId, entityType, versionNumber);
+            }
         }
     });
     console.log("Successfully processed "+event.Records.length+" records.");
