@@ -16,20 +16,14 @@ $ npm install gulp -g
 
 # Building etc..
 
-## AWS Credentials
-Setup your aws credentials in  ~/.aws/credentials
-```
-[default]
-aws_access_key_id = XXXXXXXXXX
-aws_secret_access_key = XXXXXXXXXX
+### AWS Credentials
 
-[test]
-aws_access_key_id = XXXXXXXXXX
-aws_secret_access_key = XXXXXXXXXX
+#### Local
+If deploying from a non-ec2 instance setup aws profile
+http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-multiple-profiles
 
-[prod]
-aws_access_key_id = XXXXXXXXXX
-aws_secret_access_key = XXXXXXXXXX
+#### Set default profile in shell
+'''export set AWS_DEFAULT_PROFILE=staging'''
 ```
 
 ##  Deploying
