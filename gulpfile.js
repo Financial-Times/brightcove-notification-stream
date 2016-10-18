@@ -13,7 +13,9 @@ var wrap = require('gulp-wrap');
 var zip    = require('gulp-zip');
 var lambda = require('gulp-awslambda');
 var cloudformation = require('gulp-cloudformation');
-
+const template = require('gulp-template');
+var config = { useIAM: true };
+var s3 = require('gulp-s3-upload')(config);
 var paths = {};
 
 paths.src = {};
@@ -30,81 +32,99 @@ paths.dist.js   = path.join(paths.dist.root, 'js');
 
 var isDev = (gutil.env.env == 'dev')
 gulp.task('env', function() {
-    if (isDev) {
-       gutil.log(gutil.colors.cyan('Development Env'));
-    } else if (gutil.env.env == 'test'){
-       gutil.log(gutil.colors.magenta('Test Env'));
-    } else if (gutil.env.env == 'prod'){
-       gutil.log(gutil.colors.magenta('Production Env'));
-    } else {
-      gutil.log(gutil.colors.red('--env=X, X must be dev|test|prod'));
-      process.exit(1)
+    if ((!isDev) && (!gutil.env.lambdarole) && (!gutil.env.account) && (!gutil.env.lambdauploadrole) && (!gutil.env.region)) {
+        gutil.log(gutil.colors.red('--role=, must be a valid aws arn'));
+        process.exit(1)
     }
-    if ((!isDev) && (!gutil.env.role)) {
-      gutil.log(gutil.colors.red('--role=, must be a valid aws arn'));
-      process.exit(1)
-    }
-  /*  if ((!isDev) && (!gutil.env.streamArn)) {
-        gutil.log(gutil.colors.red('--streamArn=, must be a valid aws arn'));
-        process.exit(1);
-    } */
 });
 
 gulp.task('lint:js', function() {
-        return gulp.src(paths.src.js)
-                .pipe(jshint())
-                .pipe(jshint.reporter('unix'));
+    return gulp.src(paths.src.js)
+        .pipe(jshint())
+        .pipe(jshint.reporter('unix'));
 
 });
 gulp.task('lint', ['lint:js']);
 
 gulp.task('compile:clean', function(callback) {
     if (isDev) {
-       del([paths.build.root], callback);
+        del([paths.build.root], callback);
     } else {
-       del([paths.dist.root], callback);
+        del([paths.dist.root], callback);
     }
 });
 
 gulp.task('compile:js', function() {
     return gulp.src([ paths.src.js, ])
-                           .pipe(isDev ? gutil.noop() : concat('index.js'))
-                           .pipe(isDev ? gutil.noop() : uglify())
-                           .pipe(gulp.dest(isDev ? paths.build.js : paths.dist.js))
+        .pipe(isDev ? gutil.noop() : concat('index.js'))
+        .pipe(isDev ? gutil.noop() : uglify())
+        .pipe(gulp.dest(isDev ? paths.build.js : paths.dist.js))
 });
 
 gulp.task('compile', function(callback) {
-         sequence('compile:clean', ['compile:js'], callback);
+    sequence('compile:clean', ['compile:js'], callback);
 });
 
-var lambda_params = {
-        FunctionName: 'BrightCoveNotificationStreamLambda',
-        Role: gutil.env.role,
-     /*   eventSource: {
-                EventSourceArn: gutil.env.streamArn,
-                BatchSize: 10,
-                StartingPosition: "LATEST" } */
-};
+gulp.task('deploy:cloudformation', function(callback) {
+    var cloudformation_template = 'cloudformation/' + gutil.env.env + '/flex-cloudformation-brightcove-stream.json';
 
-var aws_opts = {
-        region: 'eu-west-1'
-};
+    return gulp.src([cloudformation_template])
+        .pipe(cloudformation.init({   //Only validates the stack files
+            region: gutil.env.region
+        }).pipe(cloudformation.deploy({})).on('error', function(error) {
+            gutil.log('Unable to deploy api-gw exiting With Error', error);
+            throw error;
+        }));
 
-gulp.task('deploy:lambda', function(callback) {
-    return  gulp.src(['index.js','node_modules/**/*'])
-            .pipe(zip('archive.zip'))
-            .pipe(lambda(lambda_params, aws_opts, gutil.env.env))
-            .pipe(gulp.dest('.'));
+});
+
+gulp.task('deploy:lambda-zip', function() {
+    gulp.src(['./deploy/index.js', './node_modules/*/**'])
+        .pipe(zip('brightcove-notification-stream.zip'))
+        .pipe(gulp.dest('.'));
+});
+
+gulp.task('deploy:lambda-upload', function() {
+    gulp.src('brightcove-notification-stream.zip')
+        .pipe(s3({
+            Bucket: 'com.ft.video.artefacts'
+        }, {
+            maxRetries: 5
+        }));
+});
+
+gulp.task('deploy:cloudformation-template', function() {
+
+    gulp.src('cloudformation/flex-cloudformation-brightcove-stream.json')
+        .pipe(template({lambdarole: gutil.env.lambdarole,
+            account: gutil.env.account,
+            accountforrole: gutil.env.account,
+            vpcSecurityGroupId: gutil.env.vpcSecurityGroupId,
+            subNetOne: gutil.env.subNetOne,
+            subNetTwo: gutil.env.subNetTwo,
+            environment: gutil.env.env,
+            subNetGroupId: gutil.env.subNetGroupId}))
+        .pipe(gulp.dest('cloudformation/' + gutil.env.env));
+});
+
+gulp.task('deploy:javascript-template', function() {
+    gulp.src('index.js.template')
+        .pipe(template({account: gutil.env.account,
+            brightCoveClientId: gutil.env.brightCoveClientId,
+            brightCoveClientSecret: gutil.env.brightCoveClientSecret,
+            brightcoveAccount: gutil.env.brightcoveAccount}))
+        .pipe(rename("index.js"))
+        .pipe(gulp.dest('deploy/'));
 });
 
 gulp.task('deploy', function(callback) {
-    sequence('deploy:lambda', callback);
+    sequence('deploy:javascript-template','deploy:cloudformation-template', 'deploy:lambda-zip', 'deploy:lambda-upload', 'deploy:cloudformation', callback);
 });
 
 gulp.task('default', function(callback) {
     if  (gutil.env.env == 'dev') {
-       sequence('env', 'lint', 'compile', callback);
+        sequence('env', 'lint', 'compile', callback);
     } else {
-       sequence('env', 'lint', 'compile', 'deploy', callback);
+        sequence('env', 'lint', 'compile', 'deploy', callback);
     }
 });

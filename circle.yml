@@ -1,0 +1,5 @@
+deployment:
+  production:
+    branch: master
+    commands:
+        - gulp --env=staging --lambdarole=FTFlexServices-Deployer --account=528773984231 --region=eu-west-1

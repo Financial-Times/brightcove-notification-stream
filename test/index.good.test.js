@@ -9,42 +9,46 @@ var entityId = 4857688305001;
 var event = {
     "Records": [
         {
-            "eventID": "1",
-            "eventVersion": "1.0",
+            "eventID": "d4c83ba544ed097835829c9828e07a33",
+            "eventName": "INSERT",
+            "eventVersion": "1.1",
+            "eventSource": "aws:dynamodb",
+            "awsRegion": "eu-west-1",
             "dynamodb": {
+                "ApproximateCreationDateTime": 1476798540,
                 "Keys": {
-                    "Id": {
-                        "N": "123"
+                    "notificationDateTime": {
+                        "S": "2016-10-18T13:49:09.563Z"
+                    },
+                    "entity": {
+                        "S": "5174921338001"
                     }
                 },
                 "NewImage": {
                     "actionType": {
                         "S": "CREATE"
                     },
-                    "entity": {
-                        "S": entityId
-                    },
                     "entityStatus": {
-                        "S": "MAYBE_SUCCESS"
+                        "S": "SUCCESS"
                     },
                     "entityType": {
-                        "S": "TITLE"
+                        "S": "DIGITAL_MASTER"
+                    },
+                    "notificationDateTime": {
+                        "S": "2016-10-18T13:49:09.563Z"
+                    },
+                    "entity": {
+                        "S": "5174921338001"
                     },
                     "versionNumber": {
                         "N": "1"
-                    },
-                    "notificationDateTime": {
-                        "S": "xxx"
                     }
                 },
-                "StreamViewType": "NEW_AND_OLD_IMAGES",
-                "SequenceNumber": "111",
-                "SizeBytes": 26
+                "SequenceNumber": "200000000000707540968",
+                "SizeBytes": 200,
+                "StreamViewType": "NEW_IMAGE"
             },
-            "awsRegion": "us-west-2",
-            "eventName": "INSERT",
-            "eventSourceARN": "arn:aws:dynamodb:us-west-2:account-id:table/ExampleTableWithStream/stream/2015-06-27T00:48:05.899",
-            "eventSource": "aws:dynamodb"
+            "eventSourceARN": "arn:aws:dynamodb:eu-west-1:528773984231:table/BrightcoveCallBackEvents/stream/2016-10-18T13:42:36.172"
         }
     ]
 };

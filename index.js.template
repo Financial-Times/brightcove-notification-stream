@@ -32,7 +32,7 @@ function updateDynamoStatus(renditionsExist, entityId, action, entityType, versi
 
 function updateStatusIfRenditions(access_token, entityId, action, entityType, versionNumber, context) {
     access_token = "Bearer " + access_token;
-    var accountId = 2221711291001;
+    var accountId = <%=brightcoveAccount%>;
     var sourceRequest = "https://cms.api.brightcove.com/v1/accounts/" + accountId + /videos/ + entityId + "/sources";
     console.log('Request [' + sourceRequest + ']');
     request({
@@ -59,8 +59,8 @@ function updateStatusIfRenditions(access_token, entityId, action, entityType, ve
 }
 
 function getOauthTokenAndCheckRenditionState(action, entityId, entityType, versionNumber, context) {
-    var client_id = "c14ad44d-43d4-45e6-a81c-cc7378ca3f55";
-    var client_secret = "9BTPw1H0sWfRpOfBTPTildMQyE5RJprIWEFZ67yroNnVHrqrmvKHch68WgcLAp-svH43nWndgUcDlg8MJHQ3AQ";
+    var client_id = "<%=brightCoveClientId%>";
+    var client_secret = "<%=brightCoveClientSecret%>";
     var body = "grant_type=client_credentials&client_id=" + client_id + "&client_secret=" + client_secret ;
 
     console.log("Getting Token and Checking Rendition State");
@@ -97,14 +97,10 @@ function getOauthTokenAndCheckRenditionState(action, entityId, entityType, versi
 exports.handler = function(event, context, callback) {
     console.log("Request received:\n", JSON.stringify(event));
     event.Records.forEach(function (record) {
-        if (record.eventName == 'INSERT') {
-            console.log("Insert event");
+        if (record.eventName == 'INSERT') {console.log("Insert event");
             var action = record.dynamodb['NewImage']['actionType']['S'];
-            console.log("Action [" + action + "]");
             var entityId = record.dynamodb['NewImage']['entity']['S'];
-            console.log("EntityId [" + entityId + "]");
             var status = record.dynamodb['NewImage']['entityStatus']['S'];
-            console.log("EntityId [" + entityId + "]");
             var entityType = record.dynamodb['NewImage']['entityType']['S'];
             var versionNumber = record.dynamodb['NewImage']['versionNumber']['N'];
 

@@ -1,0 +1,95 @@
+{
+  "Resources": {
+    "BrightcoveCallBackEvents": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "BrightcoveCallBackEvents",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "notificationDateTime",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "entity",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "entity",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "notificationDateTime",
+            "KeyType": "RANGE"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "5",
+          "WriteCapacityUnits": "5"
+        },
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "notifcationTimeDateGSI",
+            "KeySchema": [
+              {
+                "AttributeName": "notificationDateTime",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "NonKeyAttributes": [
+                "entityStatus",
+                "entity",
+                "entityType",
+                "actionType",
+                "versionNumber"
+              ],
+              "ProjectionType": "INCLUDE"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": "5",
+              "WriteCapacityUnits": "5"
+            }
+          }
+        ],
+        "StreamSpecification": {
+          "StreamViewType": "NEW_IMAGE"
+        }
+      }
+    },
+    "brightcovenotificationstreamlambda": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Handler": "index.handler",
+        "Role": "arn:aws:iam::<%= accountforrole %>:role/<%= lambdarole %>",
+        "Code": {
+          "S3Bucket": "com.ft.video.artefacts",
+          "S3Key": "brightcove-notification-stream.zip"
+        },
+        "Runtime": "nodejs",
+        "Timeout": "20",
+        "FunctionName": "brightcove-notication-stream-lambda"
+      }
+    },
+    "EventSourceMapping": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "BrightcoveCallBackEvents",
+            "StreamArn"
+          ]
+        },
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "brightcovenotificationstreamlambda",
+            "Arn"
+          ]
+        },
+        "StartingPosition": "TRIM_HORIZON",
+        "BatchSize" : 1
+      }
+    }
+  }
+}
