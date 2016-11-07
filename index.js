@@ -10,7 +10,7 @@ function updateDynamoStatus(renditionsExist, entityId, action, entityType, versi
     var tableName = "BrightcoveCallBackEvents";
     var datetime = new Date().toISOString();
     var entityStatus = (renditionsExist) ? "SUCCESS" : "FAIL";
-    
+
     dynamodb.updateItem({   "TableName": tableName,
                             "Key": { "entity" : { "S": entityId },
                                      "notificationDateTime" : {"S": datetime}},
@@ -59,8 +59,8 @@ function updateStatusIfRenditions(access_token, entityId, action, entityType, ve
 }
 
 function getOauthTokenAndCheckRenditionState(action, entityId, entityType, versionNumber, context) {
-    var client_id = "c14ad44d-43d4-45e6-a81c-cc7378ca3f55";
-    var client_secret = "9BTPw1H0sWfRpOfBTPTildMQyE5RJprIWEFZ67yroNnVHrqrmvKHch68WgcLAp-svH43nWndgUcDlg8MJHQ3AQ";
+    var client_id = "XXX";
+    var client_secret = "YYYY";
     var body = "grant_type=client_credentials&client_id=" + client_id + "&client_secret=" + client_secret ;
 
     console.log("Getting Token and Checking Rendition State");
