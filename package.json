@@ -42,6 +42,7 @@
     "aws-sdk": "^2.3.7",
     "aws-sdk-mock": "^1.0.10",
     "gulp-cloudformation": "0.0.2",
+    "gulp-util": "^3.0.7",
     "nock": "^8.0.0",
     "nodeunit": "^0.9.1",
     "oauth": "^0.9.14",
